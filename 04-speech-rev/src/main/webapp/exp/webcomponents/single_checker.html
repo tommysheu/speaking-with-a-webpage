@@ -1,0 +1,47 @@
+<link rel="import" href="../framework/polymer/polymer.html">
+
+<!--
+cybelia.kao 2017.07: Single checkbox component
+main feature: functionally look like a regular checkbox, click on text will also work
+-->
+
+<dom-module id="single-checker">
+
+    <template>
+        <p style="padding: 0px; margin: 0px; border: none; line-height: 80%;">
+            <input type="checkbox" id="checker" checked="{{checked}}"></input>
+            <span id="prompt" style="cursor: pointer; color: #6668A0">[[prompt]]</span>
+        </p>
+    </template>
+
+    <script>
+    Polymer({
+        is: 'single-checker',
+        properties: {
+            prompt: {
+                type: String,
+                value: ""
+            },
+            checked: {
+                type: Boolean,
+                notify: true
+            }
+        },
+        ready: function() {
+            this.$['checker'].addEventListener("change", function(event) {
+                this.checked = this.$['checker'].checked; // no idea why we need this line... it should be two-way synced already
+                // But it sometimes just doesn't work
+                
+                this.dispatchEvent(new Event('change', {target: this, bubbles: true}));
+            }.bind(this));
+            
+            // When clicked on text, also trigger the event on checkbox
+            this.$['prompt'].addEventListener("click", function(event) {
+                this.checked = this.checked ? false : true;
+                this.$['checker'].dispatchEvent(new Event('change', {target: this.$['checker']}));
+            }.bind(this));
+        },
+    });
+    </script>
+
+</dom-module>

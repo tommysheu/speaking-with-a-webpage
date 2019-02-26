@@ -1,0 +1,5 @@
+curl -H "Content-Type: application/json; charset=utf-8"  -H "Authorization: Bearer ya29.c.Elp5BlkWTG94pLJvf3A_JM6EUqaMPURbjFc5BH0GxZOYWltbyH5LX8YDVUabsKVSvWjhWEmDY5pAIoOGk33U4AmhbnJ33qJm0laxg6kXaXBmjiIN24LNnXG_px0"  -d "{\"queryInput\":{\"text\":{\"text\":\"§A¦n\",\"languageCode\":\"zh-tw\"}},\"queryParams\":{\"timeZone\":\"Asia/Taipei\"}}" "https://dialogflow.googleapis.com/v2/projects/sayhello-2785e/agent/sessions/d4d23950-9de9-a441-6443-ccbaf61c3f2c:detectIntent"
+
+curl -H "Content-Type: application/json; charset=utf-8"  -H "Authorization: Bearer ya29.c.Elp5BlkWTG94pLJvf3A_JM6EUqaMPURbjFc5BH0GxZOYWltbyH5LX8YDVUabsKVSvWjhWEmDY5pAIoOGk33U4AmhbnJ33qJm0laxg6kXaXBmjiIN24LNnXG_px0"  -d "{\"queryInput\":{\"text\":{\"text\":\"hello\",\"languageCode\":\"zh-tw\"}},\"queryParams\":{\"timeZone\":\"Asia/Taipei\"}}" "https://dialogflow.googleapis.com/v2/projects/sayhello-2785e/agent/sessions/d4d23950-9de9-a441-6443-ccbaf61c3f2c:detectIntent"
+
+curl 'https://api.dialogflow.com/v1/query?v=20170712&query=%E4%BD%A0%E5%A5%BD&lang=zh-tw&sessionId=d4d23950-9de9-a441-6443-ccbaf61c3f2c&timezone=Asia/Taipei' -H 'Authorization:Bearer d1c54cacc26f4e339d5b4f022d07abe5'
