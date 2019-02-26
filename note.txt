@@ -19,5 +19,5 @@ mvn clean jetty:run
 
 //run as Chinese dcitation & port 443
 cd ~/speaking-with-a-webpage
-cd 04-speech-chinese
+cd 04-speech-rev
 sudo mvn clean jetty:run
