@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 html, body {
-  height: 100%;
-  overflow: hidden;
+  height: 95%;
+  //overflow: hidden;
   margin: 0;
   padding: 0;
 }
