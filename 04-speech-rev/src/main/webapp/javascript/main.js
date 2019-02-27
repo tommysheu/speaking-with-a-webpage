@@ -12,6 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+locale_value="zh-tw";
+function showLocaleOptions(s) {
+  console.log(s[s.selectedIndex].value); // get value
+  locale_value = s[s.selectedIndex].value; // get value
+}
+
+single_utterance_value=true;
+function showSingleUtteranceOptions(s) {
+  console.log(s[s.selectedIndex].value); // get value
+  single_utterance_value = eval(s[s.selectedIndex].value); // get value
+}
+
+isFinal = false;
+var result;
+
 (function helperDrawingFunctions() {
   CanvasRenderingContext2D.prototype.line = function(x1, y1, x2, y2) {
     this.lineCap = 'round';
@@ -142,11 +158,15 @@
 
   // Hook up the play/pause state to the microphone context
   var context = new AudioContext();
+  context.onstatechange = function() { //tommy
+    console.log('audio context state: ' + context.state + '\n');
+  }      
   playButton.addEventListener('pause', context.suspend.bind(context));
   playButton.addEventListener('play', context.resume.bind(context));
 
   // The first time you hit play, connect to the microphone
   playButton.addEventListener('play', function startRecording() {
+    //console.log('getUesrMedia()\n'); //tommy
     var audioPromise = navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
@@ -159,14 +179,20 @@
     });
 
     audioPromise.then(function(micStream) {
+      window.localStream = micStream; //tommy
       var microphone = context.createMediaStreamSource(micStream);
       analyser = context.createAnalyser();
       microphone.connect(analyser);
     }).catch(console.log.bind(console));
 
     initWebsocket(audioPromise);
-  }, {once: true});
-
+  //}, {once: true});
+  //  if (!isInitWebsocket) { //tommy
+  //    initWebsocket(audioPromise);
+  //    isInitWebsocket = true;
+  //  }
+  }, true);
+  //var isInitWebsocket = false;
 
   /**
    * Hook up event handlers to create / destroy websockets, and audio nodes to
@@ -190,6 +216,7 @@
     });
 
     function newWebsocket() {
+      //console.log("newWebsocket()");
       var websocketPromise = new Promise(function(resolve, reject) {
         var socket = new WebSocket('wss://' + location.host + '/transcribe');
         socket.addEventListener('open', resolve);
@@ -203,10 +230,22 @@
         // If the socket is closed for whatever reason, pause the mic
         socket.addEventListener('close', function(e) {
           console.log('Websocket closing..');
+          if (scriptNode) scriptNode.disconnect(); //tommy
+          if (sourceNode) sourceNode.disconnect();
+          if (analyser) analyser = null; 
+          localStream.getAudioTracks()[0].stop(); //tommy
+          context.removeEventListener('statechange', toggleWebsocket);
+          //console.log("context.removeEventListener('statechange', toggleWebsocket);");
           playButton.dispatchEvent(new Event('pause'));
         });
         socket.addEventListener('error', function(e) {
           console.log('Error from websocket', e);
+          if (scriptNode) scriptNode.disconnect(); //tommy
+          if (sourceNode) sourceNode.disconnect();
+          if (analyser) analyser = null; 
+          localStream.getAudioTracks()[0].stop(); //tommy
+          context.removeEventListener('statechange', toggleWebsocket);
+          //console.log("context.removeEventListener('statechange', toggleWebsocket);");
           playButton.dispatchEvent(new Event('pause'));
         });
 
@@ -225,18 +264,21 @@
           startByteStream(e);
         }, {once: true});
 
-        socket.send(JSON.stringify({sampleRate: context.sampleRate}));
+        socket.send(JSON.stringify({sampleRate: context.sampleRate,contextWord: context_word.value,localeOption:locale_value,singleUtteranceOption:single_utterance_value})); //tommy
 
       }).catch(console.log.bind(console));
     }
 
     function closeWebsocket() {
-      scriptNode.disconnect();
-      if (sourceNode) sourceNode.disconnect();
+      //console.log("closeWebsocket()");
+      //scriptNode.disconnect();
+      //if (sourceNode) sourceNode.disconnect();
       if (socket && socket.readyState === socket.OPEN) socket.close();
+      //analyser = null; //tommy
     }
 
     function toggleWebsocket(e) {
+      //console.log("toggleWebsocket()");
       var context = e.target;
       if (context.state === 'running') {
         newWebsocket();
@@ -250,24 +292,50 @@
       current: document.createElement('div')
     };
     transcript.el.appendChild(transcript.current);
+
+    function client2ndPass(result) {
+	textBox.value = "";
+	for (var i=0;i<result.alternatives_.length-1;i++)
+		textBox.value += result.alternatives_[i].transcript_ + ",";
+	textBox.value += result.alternatives_[result.alternatives_.length-1].transcript_;
+        secondPassButton(event);
+        console.log("<== " + textBox.value);
+        console.log("==> " + adaptBox.value);
+        transcript.current.innerHTML = adaptBox.value.split(",")[0];	
+
+        transcript.current = document.createElement('div');
+        transcript.el.appendChild(transcript.current);
+    }
+
     /**
      * This function is called with the transcription result from the server.
      */
     function onTranscription(e) {
-      var result = JSON.parse(e.data);
+      //var result = JSON.parse(e.data);
+      result = JSON.parse(e.data);
       if (result.alternatives_) {
         transcript.current.innerHTML = result.alternatives_[0].transcript_;
-      }
+      }  
+      isFinal = false;
       if (result.isFinal_) {
-        transcript.current = document.createElement('div');
-        transcript.el.appendChild(transcript.current);
+        isFinal = true;
+	console.log("isFinal=true");
+      	if (single_utterance_value) {
+        	playButton.dispatchEvent(new Event('pause'));
+	}
       }
     }
-
-    // When the mic is resumed or paused, change the state of the websocket too
-    context.addEventListener('statechange', toggleWebsocket);
-    // initialize for the current state
-    toggleWebsocket({target: context});
+    
+    //if (isFirstTime) { //tommy
+    //  isFirstTime = false;
+      // When the mic is resumed or paused, change the state of the websocket too
+      context.addEventListener('statechange', toggleWebsocket);
+      //console.log("context.addEventListener('statechange', toggleWebsocket);");
+      // initialize for the current state
+     // toggleWebsocket({target: context});
+    //}
   }
+  //isFirstTime = true;
 })();
+
 
