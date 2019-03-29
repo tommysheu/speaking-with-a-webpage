@@ -158,6 +158,7 @@ var result;
 
   // Hook up the play/pause state to the microphone context
   var context = new AudioContext();
+  context.suspend();
   context.onstatechange = function() { //tommy
     console.log('audio context state: ' + context.state + '\n');
   }      
